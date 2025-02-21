@@ -21,5 +21,14 @@
 			</array>
 		</dict>
 	</dict>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>We need access to your microphone to enable voice input for the chatbot.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>We need access to recognize your voice for voice commands in the chatbot.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>We need access to the camera for AR features.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>This app requires access to your photo library to upload videos.</string>
+
 </dict>
 </plist>
