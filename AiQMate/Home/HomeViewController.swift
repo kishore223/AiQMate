@@ -1,3 +1,5 @@
+// Updated HomeViewController.swift - Fixed favorite functionality
+
 import UIKit
 import AVFoundation
 import FirebaseStorage
@@ -5,8 +7,7 @@ import FirebaseFirestore
 import SDWebImage
 import ARKit
 
-// MARK: - GradientLabel
-
+// MARK: - GradientLabel (unchanged)
 class GradientLabel: UILabel {
     private let gradientLayer = CAGradientLayer()
     
@@ -62,7 +63,6 @@ class GradientLabel: UILabel {
 }
 
 // MARK: - HomeViewController
-
 class HomeViewController: UIViewController {
     
     // MARK: - Properties
@@ -84,7 +84,7 @@ class HomeViewController: UIViewController {
         return label
     }()
     
-    /// A **floating** “Create Anchor” button at the bottom-right corner
+    /// A **floating** "Create Anchor" button at the bottom-right corner
     private let createAnchorButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("", for: .normal) // We'll show icon only
@@ -199,7 +199,7 @@ class HomeViewController: UIViewController {
         let favoritesContainer = createFavoritesContainer()
         contentView.addArrangedSubview(favoritesContainer)
         
-        // 2) Create a “card” for each category
+        // 2) Create a "card" for each category
         for cat in categories {
             let card = createCategoryCard(title: cat)
             contentView.addArrangedSubview(card)
@@ -609,6 +609,20 @@ class HomeViewController: UIViewController {
         }
     }
     
+    // MARK: - NEW: Update favorite status in Firebase
+    private func updateFavoriteStatus(for imageItem: ImageItem, isFavorite: Bool) {
+        let db = Firestore.firestore()
+        db.collection("images").document(imageItem.id).updateData([
+            "isFavorite": isFavorite
+        ]) { error in
+            if let error = error {
+                print("Error updating favorite status: \(error.localizedDescription)")
+            } else {
+                print("Successfully updated favorite status for \(imageItem.name)")
+            }
+        }
+    }
+    
     /// Fetches possible filter options (sites, sections, etc.), so the user can filter if desired
     private func fetchFilterOptions() {
         let db = Firestore.firestore()
@@ -689,6 +703,61 @@ class HomeViewController: UIViewController {
             }
         })
         present(alert, animated: true)
+    }
+    
+    // MARK: - NEW: Present ObjectDetectionVC for favorites
+    private func presentObjectDetectionFor(imageItem: ImageItem) {
+        let objectDetectionVC = ObjectDetectionVC()
+        objectDetectionVC.imageItem = imageItem
+        objectDetectionVC.title     = "Pin"
+        
+        let procedureVC = ProcedureViewController()
+        procedureVC.imageItem   = imageItem
+        procedureVC.containerID = imageItem.id
+        procedureVC.title       = "Procedure"
+        
+        let aiProcedureVC = AIProcedureViewController()
+        aiProcedureVC.imageItem   = imageItem
+        aiProcedureVC.containerID = imageItem.id
+        aiProcedureVC.title       = "AI Procedure"
+        
+        let objectDetectionNav = UINavigationController(rootViewController: objectDetectionVC)
+        let procedureNav       = UINavigationController(rootViewController: procedureVC)
+        let aiProcedureNav     = UINavigationController(rootViewController: aiProcedureVC)
+        
+        objectDetectionNav.tabBarItem = UITabBarItem(
+            title: "Pin",
+            image: UIImage(systemName: "pin.fill"),
+            selectedImage: UIImage(systemName: "pin.fill")
+        )
+        procedureNav.tabBarItem = UITabBarItem(
+            title: "Procedure",
+            image: UIImage(systemName: "list.bullet"),
+            selectedImage: UIImage(systemName: "list.bullet")
+        )
+        aiProcedureNav.tabBarItem = UITabBarItem(
+            title: "AI Procedure",
+            image: UIImage(systemName: "brain.head.profile"),
+            selectedImage: UIImage(systemName: "brain.head.profile")
+        )
+        
+        let tabBarController = UITabBarController()
+        tabBarController.viewControllers = [objectDetectionNav, procedureNav, aiProcedureNav]
+        
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = backgroundColor
+        
+        tabBarController.tabBar.standardAppearance = appearance
+        if #available(iOS 15.0, *) {
+            tabBarController.tabBar.scrollEdgeAppearance = appearance
+        }
+        
+        tabBarController.tabBar.tintColor             = brandColor
+        tabBarController.tabBar.unselectedItemTintColor = .gray
+        tabBarController.modalPresentationStyle       = .fullScreen
+        
+        present(tabBarController, animated: true)
     }
 }
 
@@ -836,15 +905,49 @@ extension HomeViewController: UICollectionViewDataSource, UICollectionViewDelega
         let imageItem = items[indexPath.item]
         cell.configure(with: imageItem)
         
+        // FIXED: Add proper favorite toggle handler
+        cell.favoriteToggleHandler = { [weak self] item in
+            guard let self = self else { return }
+            
+            // Find and update the item in categoryData
+            if let catItems = self.categoryData[catName],
+               let itemIndex = catItems.firstIndex(where: { $0.id == item.id }) {
+                self.categoryData[catName]?[itemIndex].isFavorite.toggle()
+                let updatedItem = self.categoryData[catName]![itemIndex]
+                
+                // Update favorites array
+                if updatedItem.isFavorite {
+                    // Add to favorites if not already there
+                    if !self.favorites.contains(where: { $0.id == updatedItem.id }) {
+                        self.favorites.append(updatedItem)
+                    }
+                } else {
+                    // Remove from favorites
+                    self.favorites.removeAll { $0.id == updatedItem.id }
+                }
+                
+                // Update Firebase
+                self.updateFavoriteStatus(for: updatedItem, isFavorite: updatedItem.isFavorite)
+                
+                // Reload both collection views
+                DispatchQueue.main.async {
+                    collectionView.reloadItems(at: [indexPath])
+                    self.favoritesCollectionView?.reloadData()
+                }
+            }
+        }
+        
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView,
                         didSelectItemAt indexPath: IndexPath) {
+        // FIXED: Handle favorite taps to open camera/AR like normal images
         if collectionView == favoritesCollectionView {
             let favorite = favorites[indexPath.item]
             print("Tapped favorite anchor: \(favorite.name)")
-            // Possibly show details or AR view
+            // Present the same ObjectDetection flow as normal images
+            presentObjectDetectionFor(imageItem: favorite)
             return
         }
         
@@ -857,12 +960,12 @@ extension HomeViewController: UICollectionViewDataSource, UICollectionViewDelega
         let items = categoryData[catName] ?? []
         let imageItem = items[indexPath.item]
         
-        // Possibly present a detail screen or AR view
-        print("Selected item: \(imageItem.name)")
+        // Present ObjectDetection flow
+        presentObjectDetectionFor(imageItem: imageItem)
     }
 }
 
-// MARK: - FavoriteCell (a circle cell “insta story” style)
+// MARK: - FavoriteCell (a circle cell "insta story" style)
 
 class FavoriteCell: UICollectionViewCell {
     

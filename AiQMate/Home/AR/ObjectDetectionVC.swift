@@ -63,6 +63,9 @@ class ObjectDetectionVC: UIViewController, ARSCNViewDelegate, CLLocationManagerD
     /// Dictionary of annotationID -> Annotation
     private var annotations: [String: Annotation] = [:]
     
+    /// Firestore listener for real-time updates
+    private var annotationListener: ListenerRegistration?
+    
     private lazy var sceneView: ARSCNView = {
         let view = ARSCNView()
         view.delegate = self
@@ -82,20 +85,49 @@ class ObjectDetectionVC: UIViewController, ARSCNViewDelegate, CLLocationManagerD
     private let locationManager = CLLocationManager()
     private var compassImageView: UIImageView!
     
-    // MARK: - "Show Pinned Names" Button
-    
+    // MARK: - "Show Pinned Names" Button with Transparent UI
+
     private lazy var showAnnotationsButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Show Pinned Names", for: .normal)
         button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor.systemBlue
+        
+        // Make the button transparent with a subtle border
+        button.backgroundColor = UIColor.white.withAlphaComponent(0.1)
         button.layer.cornerRadius = 8
-        button.layer.masksToBounds = true
+        button.layer.borderWidth = 1.5
+        button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        button.layer.masksToBounds = false
+        
+        // Add subtle shadow for better visibility
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 2)
+        button.layer.shadowOpacity = 0.3
+        button.layer.shadowRadius = 4
+        
+        // Add blur effect background for better readability
+        let blurEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
+        let blurView = UIVisualEffectView(effect: blurEffect)
+        blurView.layer.cornerRadius = 8
+        blurView.clipsToBounds = true
+        blurView.translatesAutoresizingMaskIntoConstraints = false
+        blurView.isUserInteractionEnabled = false  // Allow touches to pass through
+        
+        button.insertSubview(blurView, at: 0)
+        
+        // Make sure blur view covers the entire button
+        NSLayoutConstraint.activate([
+            blurView.topAnchor.constraint(equalTo: button.topAnchor),
+            blurView.leadingAnchor.constraint(equalTo: button.leadingAnchor),
+            blurView.trailingAnchor.constraint(equalTo: button.trailingAnchor),
+            blurView.bottomAnchor.constraint(equalTo: button.bottomAnchor)
+        ])
+        
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(didTapShowAnnotations), for: .touchUpInside)
+        
         return button
     }()
-    
     // MARK: - Lifecycle Methods
     
     override func viewDidLoad() {
@@ -116,9 +148,6 @@ class ObjectDetectionVC: UIViewController, ARSCNViewDelegate, CLLocationManagerD
         
         // Add the button to the view
         setupShowAnnotationsButton()
-        
-        // Instead of loading all annotations, we only load for THIS container (imageItem.name)
-        loadAnnotationsForContainer()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -128,15 +157,20 @@ class ObjectDetectionVC: UIViewController, ARSCNViewDelegate, CLLocationManagerD
             sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
         }
         locationManager.startUpdatingHeading()
+        
+        // Start listening for annotation changes
+        startListeningForAnnotations()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
         sceneView.session.pause()
-        annotations.removeAll()
         imageAnchorNode = nil
         locationManager.stopUpdatingHeading()
+        
+        // Stop listening for annotation changes
+        stopListeningForAnnotations()
     }
     
     // MARK: - Setup Methods
@@ -218,27 +252,82 @@ class ObjectDetectionVC: UIViewController, ARSCNViewDelegate, CLLocationManagerD
         ])
     }
     
-    // MARK: - Loading Annotations for THIS container
+    // MARK: - Real-time Annotation Loading
     
-    private func loadAnnotationsForContainer() {
+    private func startListeningForAnnotations() {
         guard let imageItem = imageItem else { return }
         
         let db = Firestore.firestore()
-        db.collection("annotations")
-          .whereField("containerName", isEqualTo: imageItem.name)
-          .getDocuments { snapshot, error in
-            if let error = error {
-                print("Error loading annotations: \(error.localizedDescription)")
-                return
-            }
-            guard let snapshot = snapshot else { return }
-            
-            for document in snapshot.documents {
-                if let annotation = Annotation(document: document) {
-                    self.annotations[annotation.id] = annotation
+        annotationListener = db.collection("annotations")
+            .whereField("containerName", isEqualTo: imageItem.name)
+            .addSnapshotListener { [weak self] snapshot, error in
+                if let error = error {
+                    print("Error listening for annotations: \(error.localizedDescription)")
+                    return
                 }
+                
+                guard let self = self, let snapshot = snapshot else { return }
+                
+                // Track which annotations were added, modified, or removed
+                for change in snapshot.documentChanges {
+                    let document = change.document
+                    
+                    switch change.type {
+                    case .added, .modified:
+                        if let annotation = Annotation(document: document) {
+                            let oldAnnotation = self.annotations[annotation.id]
+                            self.annotations[annotation.id] = annotation
+                            
+                            // Update AR scene if image is detected
+                            if self.isImageDetected {
+                                // Remove old node if it exists
+                                if oldAnnotation != nil {
+                                    self.removeAnnotationNode(withId: annotation.id)
+                                }
+                                // Add new/updated node
+                                self.addAnnotationNode(for: annotation)
+                            }
+                        }
+                        
+                    case .removed:
+                        let annotationId = document.documentID
+                        self.annotations.removeValue(forKey: annotationId)
+                        
+                        // Remove from AR scene if image is detected
+                        if self.isImageDetected {
+                            self.removeAnnotationNode(withId: annotationId)
+                        }
+                    }
+                }
+                
+                print("Real-time update: Now have \(self.annotations.count) annotations for container \(imageItem.name).")
             }
-            print("Loaded \(self.annotations.count) annotations for container \(imageItem.name).")
+    }
+    
+    private func stopListeningForAnnotations() {
+        annotationListener?.remove()
+        annotationListener = nil
+        annotations.removeAll()
+    }
+    
+    // MARK: - AR Node Management
+    
+    private func removeAnnotationNode(withId annotationId: String) {
+        guard let imageAnchorNode = imageAnchorNode else { return }
+        
+        // Find and remove the node with the matching name
+        for childNode in imageAnchorNode.childNodes {
+            if childNode.name == annotationId {
+                childNode.removeFromParentNode()
+                break
+            }
+        }
+    }
+    
+    private func addAllAnnotationNodes() {
+        // Add nodes for all current annotations
+        for (_, annotation) in annotations {
+            addAnnotationNode(for: annotation)
         }
     }
     
@@ -265,7 +354,7 @@ class ObjectDetectionVC: UIViewController, ARSCNViewDelegate, CLLocationManagerD
                   print("Error saving annotation: \(error.localizedDescription)")
               } else {
                   print("Annotation saved successfully with containerName & categoryName.")
-                  self.annotations[annotation.id] = annotation
+                  // No need to manually update annotations here since the listener will handle it
               }
           }
     }
@@ -277,7 +366,7 @@ class ObjectDetectionVC: UIViewController, ARSCNViewDelegate, CLLocationManagerD
                 print("Error deleting annotation: \(error.localizedDescription)")
             } else {
                 print("Annotation deleted successfully")
-                self.annotations.removeValue(forKey: id)
+                // No need to manually update annotations here since the listener will handle it
             }
         }
     }
@@ -589,9 +678,8 @@ class ObjectDetectionVC: UIViewController, ARSCNViewDelegate, CLLocationManagerD
                 position: annotationNode.position
             )
             
-            // Save to Firestore
+            // Save to Firestore (the listener will handle updating the local annotations)
             saveAnnotation(newAnnotation)
-            annotations[annotationId] = newAnnotation
         }
     }
     
@@ -605,12 +693,26 @@ class ObjectDetectionVC: UIViewController, ARSCNViewDelegate, CLLocationManagerD
             // If tapped on the delete "X" button
             if nodeHit.name == "deleteButton" {
                 if let annotationNode = nodeHit.parent {
-                    annotationNode.removeFromParentNode()
-                    
                     if let annotationId = annotationNode.name {
                         deleteAnnotation(withId: annotationId)
                     }
                 }
+                return
+            }
+            
+            // If tapped on an annotation node (not the delete button)
+            if let annotationId = nodeHit.name,
+               let annotation = annotations[annotationId] {
+                // Present the detailed view
+                presentAnnotationDetails(for: annotation)
+                return
+            }
+            
+            // If tapped on a parent annotation node
+            if let parentNode = nodeHit.parent,
+               let annotationId = parentNode.name,
+               let annotation = annotations[annotationId] {
+                presentAnnotationDetails(for: annotation)
                 return
             }
         }
@@ -634,6 +736,18 @@ class ObjectDetectionVC: UIViewController, ARSCNViewDelegate, CLLocationManagerD
         }
     }
     
+    // MARK: - Present Annotation Details
+    
+    private func presentAnnotationDetails(for annotation: Annotation) {
+        let detailVC = AnnotationDetailViewController()
+        detailVC.annotation = annotation
+        detailVC.containerName = imageItem?.name ?? "Unknown"
+        
+        let navController = UINavigationController(rootViewController: detailVC)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true)
+    }
+    
     // MARK: - AR Delegate Methods
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
@@ -645,10 +759,8 @@ class ObjectDetectionVC: UIViewController, ARSCNViewDelegate, CLLocationManagerD
                 self.showImageDetectedOverlay()
                 self.compassImageView.isHidden = true
                 
-                // (Optional) after detection, we can automatically create nodes for loaded annotations:
-                for (_, annotation) in self.annotations {
-                    self.addAnnotationNode(for: annotation)
-                }
+                // Add all existing annotations to the AR scene
+                self.addAllAnnotationNodes()
             }
         }
     }
@@ -736,4 +848,5 @@ class ObjectDetectionVC: UIViewController, ARSCNViewDelegate, CLLocationManagerD
     @objc private func dismissSelf() {
         dismiss(animated: true, completion: nil)
     }
-}
+ }
+

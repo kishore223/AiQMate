@@ -1,0 +1,5 @@
+# Firebase Configuration (contains sensitive data)
+AiQMate/GoogleService-Info.plist
+
+# API Keys and Configuration (contains sensitive data)
+AiQMate/Config.swift

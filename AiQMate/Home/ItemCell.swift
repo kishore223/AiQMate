@@ -1,3 +1,5 @@
+// Updated ItemCell.swift with fixed favorite functionality
+
 import UIKit
 import SDWebImage
 
@@ -146,20 +148,60 @@ class ItemCell: UICollectionViewCell {
         imageView.sd_setImage(with: imageItem.imageURL, placeholderImage: UIImage(systemName: "photo"), options: [], completed: nil)
 
         // Update favorite button
-        updateFavoriteButton()
+        updateFavoriteButton(isFavorite: imageItem.isFavorite)
     }
 
-    private func updateFavoriteButton() {
-        let heartImageName = imageItem?.isFavorite == true ? "heart.fill" : "heart"
+    private func updateFavoriteButton(isFavorite: Bool) {
+        let heartImageName = isFavorite ? "heart.fill" : "heart"
         favoriteButton.setImage(UIImage(systemName: heartImageName), for: .normal)
-        favoriteButton.tintColor = imageItem?.isFavorite == true ? .systemRed : .customTextColor
+        favoriteButton.tintColor = isFavorite ? .systemRed : .customTextColor
+        
+        // Add a subtle animation when favoriting
+        if isFavorite {
+            favoriteButton.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+            UIView.animate(withDuration: 0.2,
+                          delay: 0,
+                          usingSpringWithDamping: 0.5,
+                          initialSpringVelocity: 0.5,
+                          options: .allowUserInteraction,
+                          animations: {
+                self.favoriteButton.transform = CGAffineTransform.identity
+            }, completion: nil)
+        }
     }
 
     // MARK: - Actions
 
     @objc private func favoriteButtonTapped() {
         guard let imageItem = imageItem else { return }
-        favoriteToggleHandler?(imageItem)
-        updateFavoriteButton()
+        
+        // Create a new ImageItem with toggled favorite status
+        let updatedItem = ImageItem(
+            id: imageItem.id,
+            name: imageItem.name,
+            imageURL: imageItem.imageURL,
+            site: imageItem.site,
+            section: imageItem.section,
+            subsection: imageItem.subsection,
+            type: imageItem.type,
+            isFavorite: !imageItem.isFavorite
+        )
+        
+        // Update the local imageItem
+        self.imageItem = updatedItem
+        
+        // Update the UI immediately for responsive feel
+        updateFavoriteButton(isFavorite: updatedItem.isFavorite)
+        
+        // Call the handler to update the parent's data and Firebase
+        favoriteToggleHandler?(updatedItem)
+    }
+
+    // MARK: - Prepare for Reuse
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        imageView.sd_cancelCurrentImageLoad()
+        imageView.image = nil
+        favoriteButton.transform = CGAffineTransform.identity
     }
 }
