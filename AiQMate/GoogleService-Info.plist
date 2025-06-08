@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyB_LwWXotc1HIlNCMWgkePHmxBxUmJdt_M</string>
+	<string></string>
 	<key>GCM_SENDER_ID</key>
-	<string>560163956216</string>
+	<string></string>
 	<key>PLIST_VERSION</key>
-	<string>1</string>
+	<string></string>
 	<key>BUNDLE_ID</key>
-	<string>com.AiQMate</string>
+	<string></string>
 	<key>PROJECT_ID</key>
-	<string>aiqmate-d17c6</string>
+	<string></string>
 	<key>STORAGE_BUCKET</key>
-	<string>aiqmate-d17c6.appspot.com</string>
+	<string></string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:560163956216:ios:503c1584f100e9d41ea20d</string>
+	<string></string>
 </dict>
 </plist>
