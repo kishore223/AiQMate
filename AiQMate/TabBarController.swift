@@ -1,3 +1,7 @@
+//
+// MARK: - 1. First, update TabBarController.swift to include the new System Audit tab
+//
+
 import UIKit
 
 class TabBarController: UITabBarController {
@@ -11,27 +15,31 @@ class TabBarController: UITabBarController {
         let homeVC = HomeViewController()
         let summarizeVC = SummarizeViewController()
         let botVC = BotViewController()
+        let systemAuditVC = SystemAuditViewController() // NEW
         let profileVC = ProfileViewController()
 
         // Set titles and icons (optional)
         homeVC.title = "Home"
         summarizeVC.title = "Summarize"
         botVC.title = "Bot"
+        systemAuditVC.title = "System Audit" // NEW
         profileVC.title = "Profile"
 
         // Create a UINavigationController for each tab (optional)
         let homeNav = UINavigationController(rootViewController: homeVC)
         let summarizeNav = UINavigationController(rootViewController: summarizeVC)
         let botNav = UINavigationController(rootViewController: botVC)
+        let systemAuditNav = UINavigationController(rootViewController: systemAuditVC) // NEW
         let profileNav = UINavigationController(rootViewController: profileVC)
 
         // Assign tab icons
         homeNav.tabBarItem.image = UIImage(systemName: "house.fill")
         summarizeNav.tabBarItem.image = UIImage(systemName: "text.book.closed.fill")
         botNav.tabBarItem.image = UIImage(systemName: "message.circle.fill")
+        systemAuditNav.tabBarItem.image = UIImage(systemName: "magnifyingglass.circle.fill") // NEW
         profileNav.tabBarItem.image = UIImage(systemName: "person.circle.fill")
 
         // Add view controllers to the tab bar
-        viewControllers = [homeNav, summarizeNav, botNav, profileNav]
+        viewControllers = [homeNav, summarizeNav, botNav, systemAuditNav, profileNav] // Updated
     }
 }

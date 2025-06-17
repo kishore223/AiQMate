@@ -37,7 +37,7 @@ class SummarizeViewController: UIViewController {
     // Add a GradientLabel for the header title
     private let titleLabel: GradientLabel = {
         let label = GradientLabel()
-        label.text = "Summarize Video"
+        label.text = "Breakdown Analysis" // Changed from "Summarize Video"
         label.font = UIFont(name: "AvenirNext-Bold", size: 20) ?? UIFont.systemFont(ofSize: 20, weight: .bold)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -424,7 +424,7 @@ class SummarizeViewController: UIViewController {
             contentView.translatesAutoresizingMaskIntoConstraints = false
 
             let titleLabel = UILabel()
-            titleLabel.text = "Video Summary"
+            titleLabel.text = "Video Analysis" // Changed from "Video Summary"
             titleLabel.textColor = UIColor.white
             titleLabel.font = UIFont.boldSystemFont(ofSize: 24) // Slightly smaller font for balance
             titleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -1042,8 +1042,8 @@ class SummarizeViewController: UIViewController {
 
         // Prepare the request body
         let messages = [
-            ["role": "system", "content": "You are a helpful assistant that summarizes video transcriptions into a step-by-step procedure."],
-            ["role": "user", "content": "Please summarize the following transcription into a step-by-step procedure:\n\n\(text)"]
+            ["role": "system", "content": "You are a helpful assistant that provides breakdown analysis of video transcriptions into step-by-step procedures."],
+            ["role": "user", "content": "Please provide a detailed breakdown analysis of the following transcription into a step-by-step procedure:\n\n\(text)"]
         ]
 
         let body: [String: Any] = [
@@ -1061,7 +1061,7 @@ class SummarizeViewController: UIViewController {
             return
         }
 
-        print("Sending transcription to OpenAI for summarization.")
+        print("Sending transcription to OpenAI for breakdown analysis.")
 
         // Create the data task
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
@@ -1130,7 +1130,7 @@ class SummarizeViewController: UIViewController {
                     self.showAlert(title: "Error", message: "Failed to save summary.\n\nError: \(error.localizedDescription)")
                 } else {
                     print("Summary saved successfully for \(filename).")
-                    self.showAlert(title: "Success", message: "Video uploaded and summarized successfully.")
+                    self.showAlert(title: "Success", message: "Video uploaded and analyzed successfully.")
                     self.dismissUploadModal()
                 }
             }
