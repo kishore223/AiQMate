@@ -701,38 +701,41 @@ class AIProcedureFormViewController: UIViewController,
         }
     }
 
+    // MARK: - Commit to Firestore
     private func finalizeSaving(db: Firestore,
                                 name: String,
                                 description: String,
                                 stepsData: [[String: Any]]) {
+
+        // Grab names from the ImageItem so we can group by category in the dashboard
+        let containerName = self.imageItem?.name ?? "Unknown"
+        let categoryName  = self.imageItem?.type ?? "Unknown"
+
         let docData: [String: Any] = [
-            "name": name,
-            "description": description,
-            "steps": stepsData,
-            "createdAt": FieldValue.serverTimestamp(),
-            "containerID": self.containerID ?? "Unknown"
+            "name":          name,
+            "description":   description,
+            "steps":         stepsData,
+            "createdAt":     FieldValue.serverTimestamp(),
+            "containerID":   self.containerID ?? "Unknown",
+            "containerName": containerName,
+            "categoryName":  categoryName      // <-- **NEW**, mirrors Procedure screen
         ]
 
-        if let editingProc = procedureToEdit {
-            db.collection("aiProcedures").document(editingProc.id).setData(docData) { error in
-                if let error = error {
-                    self.showAlert(message: "Failed to update procedure. \(error.localizedDescription)")
-                    return
-                }
-                self.delegate?.didSaveAIProcedure()
-                self.dismiss(animated: true)
+        if let editing = procedureToEdit {
+            db.collection("aiProcedures").document(editing.id).setData(docData) { [weak self] error in
+                guard error == nil else { self?.showAlert(message: "Failed to update: \(error!.localizedDescription)"); return }
+                self?.delegate?.didSaveAIProcedure()
+                self?.dismiss(animated: true)
             }
         } else {
-            db.collection("aiProcedures").addDocument(data: docData) { error in
-                if let error = error {
-                    self.showAlert(message: "Failed to save procedure. \(error.localizedDescription)")
-                    return
-                }
-                self.delegate?.didSaveAIProcedure()
-                self.dismiss(animated: true)
+            db.collection("aiProcedures").addDocument(data: docData) { [weak self] error in
+                guard error == nil else { self?.showAlert(message: "Failed to save: \(error!.localizedDescription)"); return }
+                self?.delegate?.didSaveAIProcedure()
+                self?.dismiss(animated: true)
             }
         }
     }
+
 
     private func uploadMedia(localURL: URL, completion: @escaping (URL?, Error?) -> Void) {
         let storageRef = Storage.storage().reference()

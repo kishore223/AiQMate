@@ -9,8 +9,7 @@ struct ImageItem: Equatable {
     let site: String
     let section: String
     let subsection: String
-    let type: String
-    var isFavorite: Bool
+    let type: String          // Troubleshooting | Guide | Daily Routine
 
     static func == (lhs: ImageItem, rhs: ImageItem) -> Bool {
         return lhs.id == rhs.id

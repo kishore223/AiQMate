@@ -1,52 +1,51 @@
-import UIKit
+// CategoryListViewController.swift
+// Icons added to each tab-bar item
 
-// MARK: - CategoryListViewController
+import UIKit
 
 class CategoryListViewController: UIViewController {
     
-    // MARK: - UI Properties
+    // MARK: - UI
     
     private let searchBar: UISearchBar = {
-        let searchBar = UISearchBar()
-        searchBar.placeholder = "Search images..."
-        searchBar.searchBarStyle = .minimal
-        searchBar.translatesAutoresizingMaskIntoConstraints = false
-        return searchBar
+        let sb = UISearchBar()
+        sb.placeholder = "Search images..."
+        sb.searchBarStyle = .minimal
+        sb.translatesAutoresizingMaskIntoConstraints = false
+        return sb
     }()
     
     private let filterButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(UIImage(systemName: "line.3.horizontal.decrease.circle"), for: .normal)
-        button.tintColor = .white
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
+        let btn = UIButton(type: .system)
+        btn.setImage(UIImage(systemName: "line.3.horizontal.decrease.circle"), for: .normal)
+        btn.tintColor = .white
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
     }()
     
-    private let brandColor = UIColor(red: 0/255, green: 146/255, blue: 155/255, alpha: 1.0)
-    private let backgroundColor = UIColor(red: 5/255, green: 2/255, blue: 27/255, alpha: 1.0)
+    private let brandColor      = UIColor(red: 0/255, green: 146/255, blue: 155/255, alpha: 1)
+    private let backgroundColor = UIColor(red: 5/255, green: 2/255, blue: 27/255, alpha: 1)
     
-    // MARK: - Data / Filtering
+    // MARK: - Data
     
-    private var categoryName: String
-    private var originalItems: [ImageItem]   // store the full unfiltered list
-    private var filteredItems: [ImageItem]   // store the current filtered list
+    private let categoryName: String
+    private var originalItems: [ImageItem]
+    private var filteredItems: [ImageItem]
     
-    // Example filter state. (In a real app, these might come from a FilterViewController.)
     private var selectedSite: String?
     private var selectedSection: String?
     private var selectedSubsection: String?
     
-    // MARK: - Collection View
+    // MARK: - CollectionView
     
     private let collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection          = .vertical
-        layout.minimumLineSpacing       = 15
-        layout.minimumInteritemSpacing  = 15
-        
+        layout.scrollDirection = .vertical
+        layout.minimumLineSpacing      = 15
+        layout.minimumInteritemSpacing = 15
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .clear
-        cv.contentInset    = UIEdgeInsets(top: 15, left: 15, bottom: 15, right: 15)
+        cv.contentInset = UIEdgeInsets(top: 15, left: 15, bottom: 15, right: 15)
         cv.translatesAutoresizingMaskIntoConstraints = false
         return cv
     }()
@@ -54,70 +53,54 @@ class CategoryListViewController: UIViewController {
     // MARK: - Init
     
     init(categoryName: String, imageItems: [ImageItem]) {
-        self.categoryName   = categoryName
-        self.originalItems  = imageItems
-        self.filteredItems  = imageItems
+        self.categoryName  = categoryName
+        self.originalItems = imageItems
+        self.filteredItems = imageItems
         super.init(nibName: nil, bundle: nil)
     }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) not implemented")
-    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         view.backgroundColor = backgroundColor
         
-        // Setup the top bar (search + filter).
         setupTopBar()
         setupCollectionView()
         
         title = "\(categoryName) Anchor Images"
-        
-        // Close button on the left
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "xmark"),
             style: .plain,
             target: self,
-            action: #selector(dismissSelf)
-        )
+            action: #selector(dismissSelf))
         navigationController?.navigationBar.tintColor = .white
     }
     
-    // MARK: - Setup
+    // MARK: - UI Setup
     
     private func setupTopBar() {
-        // We'll place the search bar and filter button at the top in a container.
-        let topContainer = UIView()
-        topContainer.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(topContainer)
+        let top = UIView()
+        top.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(top)
+        top.addSubview(searchBar)
+        top.addSubview(filterButton)
+        customize(searchBar)
         
-        topContainer.addSubview(searchBar)
-        topContainer.addSubview(filterButton)
-        
-        // Customize search bar appearance if desired:
-        customizeSearchBarAppearance(searchBar)
-        
-        // Constraints for the container
         NSLayoutConstraint.activate([
-            topContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            topContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            topContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            topContainer.heightAnchor.constraint(equalToConstant: 50)
-        ])
-        
-        // Constraints for the searchBar and filterButton inside topContainer
-        NSLayoutConstraint.activate([
-            searchBar.leadingAnchor.constraint(equalTo: topContainer.leadingAnchor, constant: 10),
-            searchBar.topAnchor.constraint(equalTo: topContainer.topAnchor),
-            searchBar.bottomAnchor.constraint(equalTo: topContainer.bottomAnchor),
+            top.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            top.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            top.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            top.heightAnchor.constraint(equalToConstant: 50),
+            
+            searchBar.leadingAnchor.constraint(equalTo: top.leadingAnchor, constant: 10),
+            searchBar.topAnchor.constraint(equalTo: top.topAnchor),
+            searchBar.bottomAnchor.constraint(equalTo: top.bottomAnchor),
             
             filterButton.centerYAnchor.constraint(equalTo: searchBar.centerYAnchor),
             filterButton.leadingAnchor.constraint(equalTo: searchBar.trailingAnchor, constant: 10),
-            filterButton.trailingAnchor.constraint(equalTo: topContainer.trailingAnchor, constant: -10),
+            filterButton.trailingAnchor.constraint(equalTo: top.trailingAnchor, constant: -10),
             filterButton.widthAnchor.constraint(equalToConstant: 25),
             filterButton.heightAnchor.constraint(equalToConstant: 25)
         ])
@@ -126,232 +109,148 @@ class CategoryListViewController: UIViewController {
         filterButton.addTarget(self, action: #selector(filterButtonTapped), for: .touchUpInside)
     }
     
-    private func customizeSearchBarAppearance(_ searchBar: UISearchBar) {
-        searchBar.searchBarStyle = .minimal
-        searchBar.barTintColor   = backgroundColor
-        searchBar.tintColor      = brandColor
-        
-        // For iOS 13+, you can do:
-        if let textField = searchBar.searchTextField as? UITextField {
-            textField.textColor = .white
-            textField.layer.cornerRadius = 8
-            textField.clipsToBounds = true
-            
-            if let leftView = textField.leftView as? UIImageView {
-                leftView.tintColor = .white
-            }
+    private func customize(_ sb: UISearchBar) {
+        sb.barTintColor = backgroundColor
+        sb.tintColor    = brandColor
+        sb.backgroundImage = UIImage()
+        if let tf = sb.searchTextField as? UITextField {
+            tf.textColor = .white
+            tf.layer.cornerRadius = 8
+            if let iv = tf.leftView as? UIImageView { iv.tintColor = .white }
         }
-        
-        // Remove background
-        searchBar.backgroundImage = UIImage()
-        searchBar.backgroundColor = .clear
     }
     
     private func setupCollectionView() {
         view.addSubview(collectionView)
-        
         NSLayoutConstraint.activate([
             collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 50),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-        
+        collectionView.register(ItemCell.self, forCellWithReuseIdentifier: "ItemCell")
         collectionView.delegate   = self
         collectionView.dataSource = self
-        collectionView.register(ItemCell.self, forCellWithReuseIdentifier: "ItemCell")
     }
     
-    @objc private func dismissSelf() {
-        dismiss(animated: true)
-    }
+    // MARK: - Actions
     
-    // MARK: - Filter / Search
+    @objc private func dismissSelf() { dismiss(animated: true) }
     
     @objc private func filterButtonTapped() {
-        // Present your FilterViewController or your filter UI here.
-        // For demonstration, let's do something minimal:
-        let filterVC = FilterViewController()
-        filterVC.delegate = self
-        // If you track allSites/allSections/allSubsections, you could pass them in:
-        // filterVC.sites = ...
-        // filterVC.sections = ...
-        // filterVC.subsections = ...
-        
-        // Or you can let user pick from a static list. The idea is the same.
-        let nav = UINavigationController(rootViewController: filterVC)
+        let fvc = FilterViewController()
+        fvc.delegate = self
+        let nav = UINavigationController(rootViewController: fvc)
         nav.modalPresentationStyle = .formSheet
         present(nav, animated: true)
     }
     
     private func applyFiltersAndSearch() {
-        // 1) Start from the full list
         var results = originalItems
         
-        // 2) If you have selectedSite, selectedSection, selectedSubsection, filter them
-        if let site = selectedSite, !site.isEmpty, site != "All Sites" {
-            results = results.filter { $0.site == site }
-        }
-        if let section = selectedSection, !section.isEmpty, section != "All Sections" {
-            results = results.filter { $0.section == section }
-        }
-        if let subsection = selectedSubsection, !subsection.isEmpty, subsection != "All Subsections" {
-            results = results.filter { $0.subsection == subsection }
-        }
+        if let s = selectedSite, !s.isEmpty       { results = results.filter { $0.site       == s } }
+        if let s = selectedSection, !s.isEmpty    { results = results.filter { $0.section    == s } }
+        if let s = selectedSubsection, !s.isEmpty { results = results.filter { $0.subsection == s } }
         
-        // 3) Now filter by search text if needed
-        if let searchText = searchBar.text, !searchText.isEmpty {
-            let text = searchText.lowercased()
+        if let txt = searchBar.text?.lowercased(), !txt.isEmpty {
             results = results.filter { item in
-                // Check name, site, section, subsection, type, etc.
-                return item.name.lowercased().contains(text) ||
-                       item.site.lowercased().contains(text) ||
-                       item.section.lowercased().contains(text) ||
-                       item.subsection.lowercased().contains(text) ||
-                       item.type.lowercased().contains(text)
+                item.name.lowercased().contains(txt) ||
+                item.site.lowercased().contains(txt) ||
+                item.section.lowercased().contains(txt) ||
+                item.subsection.lowercased().contains(txt) ||
+                item.type.lowercased().contains(txt)
             }
         }
-        
-        // 4) Update filteredItems
         filteredItems = results
         collectionView.reloadData()
     }
 }
 
-// MARK: - UICollectionViewDataSource, UICollectionViewDelegate
+// MARK: - CollectionView
 
-extension CategoryListViewController: UICollectionViewDataSource, UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView,
-                        numberOfItemsInSection section: Int) -> Int {
+extension CategoryListViewController: UICollectionViewDataSource,
+                                      UICollectionViewDelegate,
+                                      UICollectionViewDelegateFlowLayout {
+    
+    func collectionView(_ cv: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return filteredItems.count
     }
     
-    func collectionView(_ collectionView: UICollectionView,
+    func collectionView(_ cv: UICollectionView,
                         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ItemCell",
-                                                      for: indexPath) as! ItemCell
-        let imageItem = filteredItems[indexPath.item]
-        cell.configure(with: imageItem)
-        
-        // Add favorite toggle handler
-        cell.favoriteToggleHandler = { [weak self] item in
-            guard let self = self else { return }
-            if let idx = self.originalItems.firstIndex(where: { $0.id == item.id }) {
-                self.originalItems[idx].isFavorite.toggle()
-            }
-            // Also toggle in filteredItems if needed
-            if let idx2 = self.filteredItems.firstIndex(where: { $0.id == item.id }) {
-                self.filteredItems[idx2].isFavorite.toggle()
-            }
-            // Typically you'd also update Firebase here.
-            cell.configure(with: self.filteredItems[indexPath.item])
-        }
-        
+        let cell = cv.dequeueReusableCell(withReuseIdentifier: "ItemCell", for: indexPath) as! ItemCell
+        cell.configure(with: filteredItems[indexPath.item])
         return cell
     }
     
-    func collectionView(_ collectionView: UICollectionView,
+    func collectionView(_ cv: UICollectionView,
                         didSelectItemAt indexPath: IndexPath) {
+        let item = filteredItems[indexPath.item]
         
-        let imageItem = filteredItems[indexPath.item]
+        // 1. Build view-controllers
+        let pinVC  = ObjectDetectionVC();  pinVC.imageItem = item;  pinVC.title = "Pin"
+        let procVC = ProcedureViewController()
+        procVC.imageItem = item;  procVC.containerID = item.id;  procVC.title = "Procedure"
+        let aiVC   = AIProcedureViewController()
+        aiVC.imageItem = item;  aiVC.containerID = item.id;  aiVC.title = "AI Procedure"
         
-        let objectDetectionVC = ObjectDetectionVC()
-        objectDetectionVC.imageItem = imageItem
-        objectDetectionVC.title     = "Pin"
+        // 2. Embed each in a nav-controller
+        let pinNav  = UINavigationController(rootViewController: pinVC)
+        let procNav = UINavigationController(rootViewController: procVC)
+        let aiNav   = UINavigationController(rootViewController: aiVC)
         
-        let procedureVC = ProcedureViewController()
-        procedureVC.imageItem   = imageItem
-        procedureVC.containerID = imageItem.id
-        procedureVC.title       = "Procedure"
+        // 3. **Set icons + titles**
+        pinNav.tabBarItem  = UITabBarItem(title: "Pin",
+                                          image: UIImage(systemName: "pin.fill"),
+                                          selectedImage: UIImage(systemName: "pin.fill"))
+        procNav.tabBarItem = UITabBarItem(title: "Procedure",
+                                          image: UIImage(systemName: "list.bullet"),
+                                          selectedImage: UIImage(systemName: "list.bullet"))
+        aiNav.tabBarItem   = UITabBarItem(title: "AI Procedure",
+                                          image: UIImage(systemName: "brain.head.profile"),
+                                          selectedImage: UIImage(systemName: "brain.head.profile"))
         
-        let aiProcedureVC = AIProcedureViewController()
-        aiProcedureVC.imageItem   = imageItem
-        aiProcedureVC.containerID = imageItem.id
-        aiProcedureVC.title       = "AI Procedure"
-        
-        let objectDetectionNav = UINavigationController(rootViewController: objectDetectionVC)
-        let procedureNav       = UINavigationController(rootViewController: procedureVC)
-        let aiProcedureNav     = UINavigationController(rootViewController: aiProcedureVC)
-        
-        objectDetectionNav.tabBarItem = UITabBarItem(
-            title: "Pin",
-            image: UIImage(systemName: "pin.fill"),
-            selectedImage: UIImage(systemName: "pin.fill")
-        )
-        procedureNav.tabBarItem = UITabBarItem(
-            title: "Procedure",
-            image: UIImage(systemName: "list.bullet"),
-            selectedImage: UIImage(systemName: "list.bullet")
-        )
-        aiProcedureNav.tabBarItem = UITabBarItem(
-            title: "AI Procedure",
-            image: UIImage(systemName: "brain.head.profile"),
-            selectedImage: UIImage(systemName: "brain.head.profile")
-        )
-        
-        let tabBarController = UITabBarController()
-        tabBarController.viewControllers = [objectDetectionNav, procedureNav, aiProcedureNav]
+        // 4. Configure tab-bar controller
+        let tab = UITabBarController()
+        tab.viewControllers = [pinNav, procNav, aiNav]
         
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = backgroundColor
+        tab.tabBar.standardAppearance = appearance
+        if #available(iOS 15.0, *) { tab.tabBar.scrollEdgeAppearance = appearance }
+        tab.tabBar.tintColor              = brandColor
+        tab.tabBar.unselectedItemTintColor = .gray
+        tab.modalPresentationStyle        = .fullScreen
         
-        tabBarController.tabBar.standardAppearance = appearance
-        if #available(iOS 15.0, *) {
-            tabBarController.tabBar.scrollEdgeAppearance = appearance
-        }
-        
-        tabBarController.tabBar.tintColor             = brandColor
-        tabBarController.tabBar.unselectedItemTintColor = .gray
-        tabBarController.modalPresentationStyle       = .fullScreen
-        
-        present(tabBarController, animated: true)
-    }
-}
-
-// MARK: - UICollectionViewDelegateFlowLayout
-
-extension CategoryListViewController: UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView,
-                        layout collectionViewLayout: UICollectionViewLayout,
-                        sizeForItemAt indexPath: IndexPath) -> CGSize {
-        
-        let padding: CGFloat       = 45  // 15 left + 15 right + 15 between
-        let availableWidth         = collectionView.bounds.width - padding
-        let itemWidth              = availableWidth / 2
-        return CGSize(width: itemWidth, height: itemWidth * 1.5)
-    }
-}
-
-// MARK: - UISearchBarDelegate
-
-extension CategoryListViewController: UISearchBarDelegate {
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        applyFiltersAndSearch()
+        present(tab, animated: true)
     }
     
-    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-        // If you had a 'Cancel' button, you can reset the text or something similar:
-        searchBar.text = ""
-        applyFiltersAndSearch()
+    func collectionView(_ cv: UICollectionView,
+                        layout _: UICollectionViewLayout,
+                        sizeForItemAt _: IndexPath) -> CGSize {
+        let padding: CGFloat = 45
+        let w = (cv.bounds.width - padding) / 2
+        return CGSize(width: w, height: w * 1.5)
     }
 }
 
-// MARK: - FilterViewControllerDelegate (Example)
+// MARK: - Search & Filter Delegates
+
+extension CategoryListViewController: UISearchBarDelegate {
+    func searchBar(_ sb: UISearchBar, textDidChange _: String) { applyFiltersAndSearch() }
+    func searchBarCancelButtonClicked(_: UISearchBar) {
+        searchBar.text = ""; applyFiltersAndSearch()
+    }
+}
 
 extension CategoryListViewController: FilterViewControllerDelegate {
     func didApplyFilters(site: String?, section: String?, subsection: String?) {
-        self.selectedSite       = site
-        self.selectedSection    = section
-        self.selectedSubsection = subsection
+        selectedSite = site; selectedSection = section; selectedSubsection = subsection
         applyFiltersAndSearch()
     }
-    
     func didClearFilters() {
-        self.selectedSite       = nil
-        self.selectedSection    = nil
-        self.selectedSubsection = nil
+        selectedSite = nil; selectedSection = nil; selectedSubsection = nil
         applyFiltersAndSearch()
     }
 }
