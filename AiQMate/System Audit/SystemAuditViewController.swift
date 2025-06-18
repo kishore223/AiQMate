@@ -1,5 +1,4 @@
 
-
 //
 // MARK: - 2. SystemAuditViewController.swift - Main System Audit View Controller
 //
@@ -80,6 +79,12 @@ class SystemAuditViewController: UIViewController {
         fetchAuditContainers()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Hide the navigation bar completely
+        navigationController?.navigationBar.isHidden = true
+    }
+    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         gradientLayer.frame = headerView.bounds
@@ -88,6 +93,8 @@ class SystemAuditViewController: UIViewController {
     // MARK: - Setup Methods
     private func setupUI() {
         view.backgroundColor = backgroundColor
+        
+        // Ensure navigation bar is hidden
         navigationController?.navigationBar.isHidden = true
         
         headerView.layer.addSublayer(gradientLayer)
@@ -100,7 +107,7 @@ class SystemAuditViewController: UIViewController {
         headerView.addSubview(subtitleLabel)
         
         NSLayoutConstraint.activate([
-            headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: -40),
             headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             headerView.heightAnchor.constraint(equalToConstant: 120),
@@ -526,80 +533,119 @@ class SystemAuditUploadViewController: UIViewController {
     private func analyzeImageWithOpenAI(imageURL: URL, imageName: String, containerType: String, completion: @escaping (String) -> Void) {
         let openAIAPIKey = Config.openAIAPIKey
         
-        let prompt = """
-        You are an industrial equipment inspection AI assistant. Analyze this image of a \(containerType) component named "\(imageName)" and provide a detailed assessment.
+        // First, let's try to get the image data to convert to base64
+        URLSession.shared.dataTask(with: imageURL) { data, response, error in
+            guard let imageData = data, error == nil else {
+                completion("Error: Could not download image for analysis")
+                return
+            }
+            
+            // Convert image to base64
+            let base64Image = imageData.base64EncodedString()
+            
+            let prompt = """
+            You are an industrial equipment inspection AI assistant. Analyze this image of a \(containerType) component named "\(imageName)" and provide a detailed assessment.
 
-        Please identify:
-        1. Any visible faults, defects, or potential issues
-        2. Wear patterns or signs of deterioration
-        3. Safety concerns or hazards
-        4. Maintenance recommendations
-        5. Overall condition assessment (Good/Fair/Poor/Critical)
+            Please identify:
+            1. Any visible faults, defects, or potential issues
+            2. Wear patterns or signs of deterioration  
+            3. Safety concerns or hazards
+            4. Maintenance recommendations
+            5. Overall condition assessment (Good/Fair/Poor/Critical)
 
-        If no issues are found, state that the component appears to be in good condition.
-        Be specific and technical in your analysis.
-        """
-        
-        let requestBody: [String: Any] = [
-            "model": "gpt-4o-mini",
-            "messages": [
-                [
-                    "role": "user",
-                    "content": [
-                        [
-                            "type": "text",
-                            "text": prompt
-                        ],
-                        [
-                            "type": "image_url",
-                            "image_url": [
-                                "url": imageURL.absoluteString
+            If this is not industrial equipment, still provide an analysis of any mechanical or structural components visible in the image.
+            Be specific and technical in your analysis.
+            """
+            
+            let requestBody: [String: Any] = [
+                "model": "gpt-4o",
+                "messages": [
+                    [
+                        "role": "user",
+                        "content": [
+                            [
+                                "type": "text",
+                                "text": prompt
+                            ],
+                            [
+                                "type": "image_url",
+                                "image_url": [
+                                    "url": "data:image/jpeg;base64,\(base64Image)"
+                                ]
                             ]
                         ]
                     ]
-                ]
-            ],
-            "max_tokens": 500
-        ]
-        
-        guard let httpBody = try? JSONSerialization.data(withJSONObject: requestBody) else {
-            completion("Error: Failed to create request body")
-            return
-        }
-        
-        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(openAIAPIKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = httpBody
-        
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                completion("Error: \(error.localizedDescription)")
+                ],
+                "max_tokens": 500
+            ]
+            
+            guard let httpBody = try? JSONSerialization.data(withJSONObject: requestBody) else {
+                completion("Error: Failed to create request body")
                 return
             }
             
-            guard let data = data else {
-                completion("Error: No data received")
-                return
-            }
+            var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
+            request.httpMethod = "POST"
+            request.setValue("Bearer \(openAIAPIKey)", forHTTPHeaderField: "Authorization")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = httpBody
+            request.timeoutInterval = 60 // Increase timeout
             
-            do {
-                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let choices = json["choices"] as? [[String: Any]],
-                   let firstChoice = choices.first,
-                   let message = firstChoice["message"] as? [String: Any],
-                   let content = message["content"] as? String {
-                    completion(content.trimmingCharacters(in: .whitespacesAndNewlines))
-                } else {
-                    completion("Error: Unexpected response format")
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    print("Network error: \(error.localizedDescription)")
+                    completion("Error: Network issue - \(error.localizedDescription)")
+                    return
                 }
-            } catch {
-                completion("Error: Failed to parse response")
+                
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    completion("Error: Invalid response")
+                    return
+                }
+                
+                print("HTTP Status Code: \(httpResponse.statusCode)")
+                
+                guard let data = data else {
+                    completion("Error: No data received")
+                    return
+                }
+                
+                // Print raw response for debugging
+                if let responseString = String(data: data, encoding: .utf8) {
+                    print("Raw API Response: \(responseString)")
+                }
+                
+                do {
+                    if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        
+                        // Check for API errors
+                        if let error = json["error"] as? [String: Any],
+                           let message = error["message"] as? String {
+                            completion("API Error: \(message)")
+                            return
+                        }
+                        
+                        // Parse successful response
+                        if let choices = json["choices"] as? [[String: Any]],
+                           let firstChoice = choices.first,
+                           let message = firstChoice["message"] as? [String: Any],
+                           let content = message["content"] as? String {
+                            completion(content.trimmingCharacters(in: .whitespacesAndNewlines))
+                        } else {
+                            completion("Error: Unexpected response format")
+                        }
+                    } else {
+                        completion("Error: Could not parse JSON response")
+                    }
+                } catch {
+                    print("JSON parsing error: \(error)")
+                    completion("Error: Failed to parse response - \(error.localizedDescription)")
+                }
             }
-        }
-        
-        task.resume()
+            
+            task.resume()
+            
+        }.resume()
     }
     
     private func showAlert(message: String) {
