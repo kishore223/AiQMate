@@ -1,6 +1,3 @@
-//
-// MARK: - 1. First, update TabBarController.swift to include the new System Audit tab
-//
 import UIKit
 
 class TabBarController: UITabBarController {
@@ -14,31 +11,35 @@ class TabBarController: UITabBarController {
         let homeVC = HomeViewController()
         let summarizeVC = SummarizeViewController()
         let botVC = BotViewController()
-        let systemAuditVC = SystemAuditViewController() // NEW
+        let systemAuditVC = SystemAuditViewController()
+        let arWorldVC = ARWorldViewController() // NEW ARWorld tab
         let profileVC = ProfileViewController()
 
-        // Set titles and icons (optional)
+        // Set titles and icons
         homeVC.title = "Home"
         summarizeVC.title = "Summarize"
         botVC.title = "Bot"
-        systemAuditVC.title = "System Audit" // NEW
+        systemAuditVC.title = "System Audit"
+        arWorldVC.title = "ARWorld" // NEW
         profileVC.title = "Profile"
 
-        // Create a UINavigationController for each tab (optional)
+        // Create a UINavigationController for each tab
         let homeNav = UINavigationController(rootViewController: homeVC)
         let summarizeNav = UINavigationController(rootViewController: summarizeVC)
         let botNav = UINavigationController(rootViewController: botVC)
-        let systemAuditNav = UINavigationController(rootViewController: systemAuditVC) // NEW
+        let systemAuditNav = UINavigationController(rootViewController: systemAuditVC)
+        let arWorldNav = UINavigationController(rootViewController: arWorldVC) // NEW
         let profileNav = UINavigationController(rootViewController: profileVC)
 
         // Assign tab icons
         homeNav.tabBarItem.image = UIImage(systemName: "house.fill")
         summarizeNav.tabBarItem.image = UIImage(systemName: "text.book.closed.fill")
         botNav.tabBarItem.image = UIImage(systemName: "message.circle.fill")
-        systemAuditNav.tabBarItem.image = UIImage(systemName: "magnifyingglass.circle.fill") // NEW
+        systemAuditNav.tabBarItem.image = UIImage(systemName: "magnifyingglass.circle.fill")
+        arWorldNav.tabBarItem.image = UIImage(systemName: "arkit") // NEW - ARKit icon
         profileNav.tabBarItem.image = UIImage(systemName: "person.circle.fill")
 
-        // Add view controllers to the tab bar
-        viewControllers = [homeNav, summarizeNav, botNav, systemAuditNav, profileNav] // Updated
+        // Add view controllers to the tab bar - ARWorld positioned before Profile
+        viewControllers = [homeNav, summarizeNav, botNav, systemAuditNav, arWorldNav, profileNav]
     }
 }

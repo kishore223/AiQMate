@@ -13,6 +13,9 @@
 		1C275DD72CBC74A4002A713E /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 1C275DD62CBC74A4002A713E /* SDWebImage */; };
 		1C39D75B2CB34F3600E02173 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 1C39D75A2CB34F3600E02173 /* Alamofire */; };
 		1CCFAB982CB622C1008E9699 /* NextGrowingTextView in Frameworks */ = {isa = PBXBuildFile; productRef = 1CCFAB972CB622C1008E9699 /* NextGrowingTextView */; };
+		1CD2CE682E2D006000817A96 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 1CD2CE672E2D006000817A96 /* FirebaseAnalytics */; };
+		1CE63F972E3364F400692343 /* ARCoreCloudAnchors in Frameworks */ = {isa = PBXBuildFile; productRef = 1CE63F962E3364F400692343 /* ARCoreCloudAnchors */; };
+		1CE63FE82E336C5100692343 /* ARCoreGARSession in Frameworks */ = {isa = PBXBuildFile; productRef = 1CE63FE72E336C5100692343 /* ARCoreGARSession */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,8 +77,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1CE63FE82E336C5100692343 /* ARCoreGARSession in Frameworks */,
+				1CD2CE682E2D006000817A96 /* FirebaseAnalytics in Frameworks */,
 				1C275DD72CBC74A4002A713E /* SDWebImage in Frameworks */,
 				1C24B48B2CB2508900A4B6E7 /* FirebaseAuth in Frameworks */,
+				1CE63F972E3364F400692343 /* ARCoreCloudAnchors in Frameworks */,
 				1C39D75B2CB34F3600E02173 /* Alamofire in Frameworks */,
 				1C24B48D2CB2508900A4B6E7 /* FirebaseFirestore in Frameworks */,
 				1C24B48F2CB2508900A4B6E7 /* FirebaseStorage in Frameworks */,
@@ -146,6 +152,9 @@
 				1C39D75A2CB34F3600E02173 /* Alamofire */,
 				1CCFAB972CB622C1008E9699 /* NextGrowingTextView */,
 				1C275DD62CBC74A4002A713E /* SDWebImage */,
+				1CD2CE672E2D006000817A96 /* FirebaseAnalytics */,
+				1CE63F962E3364F400692343 /* ARCoreCloudAnchors */,
+				1CE63FE72E336C5100692343 /* ARCoreGARSession */,
 			);
 			productName = AiQMate;
 			productReference = 1C24B4512CB2367400A4B6E7 /* AiQMate.app */;
@@ -234,6 +243,7 @@
 				1C39D7592CB34F3600E02173 /* XCRemoteSwiftPackageReference "Alamofire" */,
 				1CCFAB962CB622C1008E9699 /* XCRemoteSwiftPackageReference "NextGrowingTextView" */,
 				1C275DD52CBC74A4002A713E /* XCRemoteSwiftPackageReference "SDWebImage" */,
+				1CE63F952E3364F400692343 /* XCRemoteSwiftPackageReference "arcore-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1C24B4522CB2367400A4B6E7 /* Products */;
@@ -634,6 +644,14 @@
 				minimumVersion = 2.2.1;
 			};
 		};
+		1CE63F952E3364F400692343 /* XCRemoteSwiftPackageReference "arcore-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google-ar/arcore-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.50.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -666,6 +684,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1CCFAB962CB622C1008E9699 /* XCRemoteSwiftPackageReference "NextGrowingTextView" */;
 			productName = NextGrowingTextView;
+		};
+		1CD2CE672E2D006000817A96 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1C24B4892CB2508900A4B6E7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		1CE63F962E3364F400692343 /* ARCoreCloudAnchors */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1CE63F952E3364F400692343 /* XCRemoteSwiftPackageReference "arcore-ios-sdk" */;
+			productName = ARCoreCloudAnchors;
+		};
+		1CE63FE72E336C5100692343 /* ARCoreGARSession */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1CE63F952E3364F400692343 /* XCRemoteSwiftPackageReference "arcore-ios-sdk" */;
+			productName = ARCoreGARSession;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
