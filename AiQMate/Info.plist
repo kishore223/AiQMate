@@ -2,34 +2,36 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>UIApplicationSceneManifest</key>
-    <dict>
-        <key>UIApplicationSupportsMultipleScenes</key>
-        <false/>
-        <key>UISceneConfigurations</key>
-        <dict>
-            <key>UIWindowSceneSessionRoleApplication</key>
-            <array>
-                <dict>
-                    <key>UISceneConfigurationName</key>
-                    <string>Default Configuration</string>
-                    <key>UISceneDelegateClassName</key>
-                    <string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
-                    <key>UISceneStoryboardFile</key>
-                    <string>Main</string>
-                </dict>
-            </array>
-        </dict>
-    </dict>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>We need access to your microphone to enable voice input for the chatbot.</string>
-    <key>NSSpeechRecognitionUsageDescription</key>
-    <string>We need access to recognize your voice for voice commands in the chatbot.</string>
-    <key>NSCameraUsageDescription</key>
-    <string>We need access to the camera for AR features.</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>This app requires access to your photo library to upload videos.</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Location helps improve AR cloud anchor accuracy and sharing.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneConfigurationName</key>
+					<string>Default Configuration</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>We need access to your microphone to enable voice input for the chatbot.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>We need access to recognize your voice for voice commands in the chatbot.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to the camera for AR features.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to your photo library to upload videos.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location helps improve AR cloud anchor accuracy and sharing.</string>
+	<key>ARKitUsageDescription</key>
+	<string>This app uses ARKit for augmented reality features and text pinning.</string>
 </dict>
 </plist>

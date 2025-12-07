@@ -11,6 +11,7 @@
 		1C24B48D2CB2508900A4B6E7 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C24B48C2CB2508900A4B6E7 /* FirebaseFirestore */; };
 		1C24B48F2CB2508900A4B6E7 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 1C24B48E2CB2508900A4B6E7 /* FirebaseStorage */; };
 		1C275DD72CBC74A4002A713E /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 1C275DD62CBC74A4002A713E /* SDWebImage */; };
+		1C35F64C2E48763100F0255B /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = 1C35F64B2E48763100F0255B /* FirebaseDatabase */; };
 		1C39D75B2CB34F3600E02173 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 1C39D75A2CB34F3600E02173 /* Alamofire */; };
 		1CCFAB982CB622C1008E9699 /* NextGrowingTextView in Frameworks */ = {isa = PBXBuildFile; productRef = 1CCFAB972CB622C1008E9699 /* NextGrowingTextView */; };
 		1CD2CE682E2D006000817A96 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 1CD2CE672E2D006000817A96 /* FirebaseAnalytics */; };
@@ -77,6 +78,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C35F64C2E48763100F0255B /* FirebaseDatabase in Frameworks */,
 				1CE63FE82E336C5100692343 /* ARCoreGARSession in Frameworks */,
 				1CD2CE682E2D006000817A96 /* FirebaseAnalytics in Frameworks */,
 				1C275DD72CBC74A4002A713E /* SDWebImage in Frameworks */,
@@ -155,6 +157,7 @@
 				1CD2CE672E2D006000817A96 /* FirebaseAnalytics */,
 				1CE63F962E3364F400692343 /* ARCoreCloudAnchors */,
 				1CE63FE72E336C5100692343 /* ARCoreGARSession */,
+				1C35F64B2E48763100F0255B /* FirebaseDatabase */,
 			);
 			productName = AiQMate;
 			productReference = 1C24B4512CB2367400A4B6E7 /* AiQMate.app */;
@@ -674,6 +677,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1C275DD52CBC74A4002A713E /* XCRemoteSwiftPackageReference "SDWebImage" */;
 			productName = SDWebImage;
+		};
+		1C35F64B2E48763100F0255B /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1C24B4892CB2508900A4B6E7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDatabase;
 		};
 		1C39D75A2CB34F3600E02173 /* Alamofire */ = {
 			isa = XCSwiftPackageProductDependency;
